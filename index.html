@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Movement Perception Study</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #18181c;
+    --surface2: #222228;
+    --border: #2e2e38;
+    --text: #f0eff4;
+    --text-muted: #8884a0;
+    --accent: #c8b8ff;
+    --accent2: #7c6fcd;
+    --gentle: #7eb8e0;
+    --rude: #e07070;
+    --radius: 12px;
+    --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,111,205,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 80% 80%, rgba(200,184,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen {
+    display: none;
+    width: 100%;
+    max-width: 680px;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 0.5s ease forwards;
+  }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px;
+  }
+
+  @media (max-width: 540px) {
+    .card { padding: 28px 20px; }
+  }
+
+  .label-small {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 5vw, 36px);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #c4c2d4;
+    margin-bottom: 16px;
+  }
+
+  .consent-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin: 28px 0;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #b0aec4;
+  }
+
+  .radio-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+  .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 14px;
+    color: #c4c2d4;
+  }
+
+  .radio-option:hover { border-color: var(--accent2); background: rgba(124,111,205,0.06); }
+  .radio-option.selected { border-color: var(--accent); background: rgba(200,184,255,0.08); color: var(--text); }
+
+  .radio-option input { display: none; }
+
+  .radio-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    transition: var(--transition);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .radio-option.selected .radio-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .radio-option.selected .radio-dot::after {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--bg);
+    border-radius: 50%;
+  }
+
+  .field { margin-bottom: 28px; }
+  .field label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.05em; }
+
+  input[type="number"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: var(--transition);
+  }
+
+  input[type="number"]:focus { border-color: var(--accent2); }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 32px;
+    border-radius: 100px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    letter-spacing: 0.03em;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #1a1828;
+  }
+  .btn-primary:hover { background: #d8caff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,184,255,0.2); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-outline:hover { border-color: var(--accent2); color: var(--text); }
+
+  .btn-row { display: flex; justify-content: flex-end; margin-top: 36px; gap: 12px; }
+
+  /* PROGRESS */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* VIDEO TASK */
+  .video-counter {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-align: right;
+    margin-bottom: 20px;
+  }
+
+  .video-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 36px;
+  }
+
+  .video-wrapper video {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .video-placeholder {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .video-placeholder svg { opacity: 0.4; }
+
+  /* SLIDER */
+  .slider-section { margin-bottom: 32px; }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .slider-label {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .slider-label.gentle { color: var(--gentle); }
+  .slider-label.rude   { color: var(--rude); }
+
+  .slider-track {
+    position: relative;
+    height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--accent2), 0 4px 12px rgba(0,0,0,0.4);
+    cursor: grab;
+    transition: box-shadow 0.2s;
+  }
+
+  input[type="range"]:active::-webkit-slider-thumb { cursor: grabbing; box-shadow: 0 0 0 3px var(--accent), 0 4px 16px rgba(0,0,0,0.5); }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--accent2);
+    cursor: grab;
+  }
+
+  .slider-value-display {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .slider-value-display span {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  /* INTERACTION GATE */
+  .gate-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(200,184,255,0.1);
+    border: 1px solid var(--accent2);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 28px;
+    font-size: 28px;
+  }
+
+  /* PRELOAD */
+  .preload-bar { margin: 24px 0; }
+  .preload-text { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 12px; }
+
+  /* THANK YOU */
+  .thank-icon {
+    font-size: 48px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* VALIDATION */
+  .error-msg {
+    font-size: 12px;
+    color: var(--rude);
+    margin-top: 8px;
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+
+  .required-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== SCREEN 1: CONSENT ==================== -->
+<div class="screen active" id="screen-consent">
+  <div class="card">
+    <div class="label-small">Movement Perception Study</div>
+    <h1>Before we <em>begin</em></h1>
+
+    <div class="consent-box">
+      The present study is conducted in accordance with the Ethics Committee of the University of Turin. The collected data will be processed in accordance with privacy regulations. No personal data will be disclosed.<br><br>
+      Please confirm that you agree to take part in the study.
+    </div>
+
+    <div class="radio-group" id="consent-options">
+      <label class="radio-option" onclick="selectRadio(this,'consent','agree')">
+        <input type="radio" name="consent" value="agree">
+        <span class="radio-dot"></span>
+        I agree
+      </label>
+      <label class="radio-option" onclick="selectRadio(this,'consent','disagree')">
+        <input type="radio" name="consent" value="disagree">
+        <span class="radio-dot"></span>
+        I do not agree
+      </label>
+    </div>
+
+    <p class="error-msg" id="consent-error">Please select an option to continue.</p>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="submitConsent()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 1b: DECLINED ==================== -->
+<div class="screen" id="screen-declined">
+  <div class="card" style="text-align:center;">
+    <div class="thank-icon">🙏</div>
+    <h1>Thank you for your time</h1>
+    <p>You have chosen not to participate in this study. You may close this window.</p>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 2: DEMOGRAPHICS ==================== -->
+<div class="screen" id="screen-demo">
+  <div class="card">
+    <div class="label-small">Step 1 of 3</div>
+    <h1>A few questions <em>about you</em></h1>
+
+    <div class="field">
+      <label>How old are you?</label>
+      <input type="number" id="age" min="18" max="120" placeholder="Your age">
+      <p class="error-msg" id="age-error">Please enter a valid age (18–120).</p>
+    </div>
+
+    <div class="field">
+      <label>What is your gender?</label>
+      <div class="radio-group">
+        <label class="radio-option" onclick="selectRadio(this,'gender','female')">
+          <input type="radio" name="gender" value="female"><span class="radio-dot"></span>Female
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'gender','male')">
+          <input type="radio" name="gender" value="male"><span class="radio-dot"></span>Male
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'gender','other')">
+          <input type="radio" name="gender" value="other"><span class="radio-dot"></span>Other
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'gender','prefer_not')">
+          <input type="radio" name="gender" value="prefer_not"><span class="radio-dot"></span>Prefer not to say
+        </label>
+      </div>
+      <p class="error-msg" id="gender-error">Please select an option.</p>
+    </div>
+
+    <div class="field">
+      <label>Have you ever practiced dance?</label>
+      <div class="radio-group">
+        <label class="radio-option" onclick="selectRadio(this,'dance','no')">
+          <input type="radio" name="dance" value="no"><span class="radio-dot"></span>No
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'dance','amateur')">
+          <input type="radio" name="dance" value="amateur"><span class="radio-dot"></span>Yes, in an amateur context
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'dance','pre_prof')">
+          <input type="radio" name="dance" value="pre_prof"><span class="radio-dot"></span>Yes, at a pre-professional level
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'dance','professional')">
+          <input type="radio" name="dance" value="professional"><span class="radio-dot"></span>Yes, at a professional level
+        </label>
+      </div>
+      <p class="error-msg" id="dance-error">Please select an option.</p>
+    </div>
+
+    <!-- CONDITIONAL: years of practice -->
+    <div class="field" id="years-field" style="display:none;">
+      <label>How many years have you practiced dance?</label>
+      <div class="radio-group">
+        <label class="radio-option" onclick="selectRadio(this,'years','lt1')">
+          <input type="radio" name="years" value="lt1"><span class="radio-dot"></span>Less than 1 year
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'years','1to3')">
+          <input type="radio" name="years" value="1to3"><span class="radio-dot"></span>1 to 3 years
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'years','4to7')">
+          <input type="radio" name="years" value="4to7"><span class="radio-dot"></span>4 to 7 years
+        </label>
+        <label class="radio-option" onclick="selectRadio(this,'years','8plus')">
+          <input type="radio" name="years" value="8plus"><span class="radio-dot"></span>8 or more years
+        </label>
+      </div>
+      <p class="error-msg" id="years-error">Please select an option.</p>
+    </div>
+
+    <p class="required-note">All fields are required.</p>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="submitDemo()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 3: INSTRUCTIONS ==================== -->
+<div class="screen" id="screen-instructions">
+  <div class="card">
+    <div class="label-small">Step 2 of 3</div>
+    <h1>What you'll <em>do</em></h1>
+
+    <p>You will watch a series of short dance video clips. Each clip lasts approximately 1–2 seconds and will loop continuously while you make your rating.</p>
+
+    <p>After each video, move the slider to indicate how you perceive the quality of the movement — from <strong style="color:var(--gentle)">Gentle</strong> on the left to <strong style="color:var(--rude)">Rude</strong> on the right.</p>
+
+    <p>There are no right or wrong answers. We are interested in your spontaneous, personal perception. Please rate each video independently.</p>
+
+    <div class="divider"></div>
+
+    <p style="font-size:13px; color:var(--text-muted);">
+      The study consists of <strong style="color:var(--text)">5 short video clips</strong>. It should take approximately 2–3 minutes to complete. Please make sure you are in a quiet and comfortable environment.
+    </p>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goToGate()">I'm ready →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 4: INTERACTION GATE ==================== -->
+<div class="screen" id="screen-gate">
+  <div class="card" style="text-align:center;">
+    <div class="gate-icon">▶</div>
+    <div class="label-small">Step 3 of 3 — Task</div>
+    <h1>Ready to <em>start</em>?</h1>
+    <p>Videos will begin playing automatically. Tap the button below to unlock video playback on your device and start the task.</p>
+    <div class="btn-row" style="justify-content:center; margin-top:32px;">
+      <button class="btn btn-primary" onclick="startTask()" style="padding:16px 48px; font-size:15px;">Start Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 5: PRELOAD ==================== -->
+<div class="screen" id="screen-preload">
+  <div class="card" style="text-align:center;">
+    <div class="label-small">Loading</div>
+    <h1>Preparing your <em>videos</em>…</h1>
+    <p>Please wait while we load all video clips. This ensures smooth playback throughout the task.</p>
+    <div class="preload-bar">
+      <div class="progress-bar" style="margin-bottom:0;">
+        <div class="progress-fill" id="preload-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <p class="preload-text" id="preload-text">0 / 5 loaded</p>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 6: TASK ==================== -->
+<div class="screen" id="screen-task">
+  <div class="card">
+    <div class="progress-bar">
+      <div class="progress-fill" id="task-progress" style="width:0%"></div>
+    </div>
+
+    <div class="video-counter" id="video-counter">Video 1 of 5</div>
+
+    <div class="video-wrapper" id="video-wrapper">
+      <!-- video injected by JS -->
+    </div>
+
+    <div class="slider-section">
+      <div class="slider-labels">
+        <span class="slider-label gentle">← Gentle</span>
+        <span class="slider-label rude">Rude →</span>
+      </div>
+      <div class="slider-track">
+        <input type="range" id="rating-slider" min="0" max="100" value="50"
+          oninput="updateSliderDisplay(this.value)" ontouchstart="unlockSlider()">
+      </div>
+      <div class="slider-value-display">
+        Your rating: <span id="slider-val">50</span> / 100
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="confirm-btn" onclick="confirmRating()">Confirm rating →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 7: THANK YOU ==================== -->
+<div class="screen" id="screen-thanks">
+  <div class="card" style="text-align:center;">
+    <div class="thank-icon">✦</div>
+    <div class="label-small">Study complete</div>
+    <h1>Thank you for <em>participating</em></h1>
+    <p>Your responses have been recorded. Your contribution is valuable to our research on dance perception.</p>
+    <div class="divider"></div>
+    <p style="font-size:13px; color:var(--text-muted);">You may now close this window.</p>
+
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — replace these URLs with your actual video files
+// For the pilot, use 5 short MP4/WebM clips.
+// Each entry: { id: unique string, src: [mp4url, webmurl] }
+// ============================================================
+const VIDEO_CONFIGS = [
+  { id: 'vid_001', src: [null, 'https://cdn.jsdelivr.net/gh/deborahteggi/dance-study-stimuli@main/video1.webm'] },
+  { id: 'vid_002', src: [null, 'https://cdn.jsdelivr.net/gh/deborahteggi/dance-study-stimuli@main/video2.webm'] },
+  { id: 'vid_003', src: [null, 'https://cdn.jsdelivr.net/gh/deborahteggi/dance-study-stimuli@main/video3.webm'] },
+  { id: 'vid_004', src: [null, 'https://cdn.jsdelivr.net/gh/deborahteggi/dance-study-stimuli@main/video4.webm'] },
+  { id: 'vid_005', src: [null, 'https://cdn.jsdelivr.net/gh/deborahteggi/dance-study-stimuli@main/video5.webm'] },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  subjectId: generateId(),
+  consent: null,
+  age: null,
+  gender: null,
+  dance: null,
+  years: null,
+  trialOrder: [],
+  currentTrial: 0,
+  ratings: [],
+  startTime: null,
+  trialStart: null,
+};
+
+const preloadedVideos = {};
+
+// ============================================================
+// UTILS
+// ============================================================
+function generateId() {
+  return 'S_' + Date.now() + '_' + Math.random().toString(36).slice(2,7).toUpperCase();
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function selectRadio(el, name, value) {
+  document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+    r.closest('.radio-option').classList.remove('selected');
+  });
+  el.classList.add('selected');
+  const input = el.querySelector('input');
+  if (input) input.checked = true;
+
+  // Show/hide years field
+  if (name === 'dance') {
+    const yearsField = document.getElementById('years-field');
+    yearsField.style.display = value !== 'no' ? 'block' : 'none';
+    if (value === 'no') {
+      document.querySelectorAll('input[name="years"]').forEach(r => {
+        r.closest('.radio-option').classList.remove('selected');
+      });
+    }
+  }
+}
+
+function getRadioValue(name) {
+  const selected = document.querySelector(`.radio-option.selected input[name="${name}"]`);
+  if (selected) return selected.value;
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  return checked ? checked.value : null;
+}
+
+function showError(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('visible', show);
+}
+
+// ============================================================
+// CONSENT
+// ============================================================
+function submitConsent() {
+  const val = getRadioValue('consent');
+  if (!val) { showError('consent-error', true); return; }
+  showError('consent-error', false);
+  state.consent = val;
+  if (val === 'disagree') { showScreen('screen-declined'); return; }
+  showScreen('screen-demo');
+}
+
+// ============================================================
+// DEMOGRAPHICS
+// ============================================================
+function submitDemo() {
+  let valid = true;
+
+  const age = parseInt(document.getElementById('age').value);
+  if (!age || age < 18 || age > 120) { showError('age-error', true); valid = false; }
+  else { showError('age-error', false); state.age = age; }
+
+  const gender = getRadioValue('gender');
+  if (!gender) { showError('gender-error', true); valid = false; }
+  else { showError('gender-error', false); state.gender = gender; }
+
+  const dance = getRadioValue('dance');
+  if (!dance) { showError('dance-error', true); valid = false; }
+  else { showError('dance-error', false); state.dance = dance; }
+
+  if (dance && dance !== 'no') {
+    const years = getRadioValue('years');
+    if (!years) { showError('years-error', true); valid = false; }
+    else { showError('years-error', false); state.years = years; }
+  } else {
+    state.years = 'N/A';
+  }
+
+  if (!valid) return;
+  showScreen('screen-instructions');
+}
+
+// ============================================================
+// GATE → PRELOAD → TASK
+// ============================================================
+function goToGate() {
+  showScreen('screen-gate');
+}
+
+function startTask() {
+  state.trialOrder = shuffle(VIDEO_CONFIGS.map((_, i) => i));
+  state.startTime = Date.now();
+  showScreen('screen-preload');
+  preloadVideos();
+}
+
+function preloadVideos() {
+  const total = VIDEO_CONFIGS.length;
+  let loaded = 0;
+
+  const fill = document.getElementById('preload-fill');
+  const txt = document.getElementById('preload-text');
+
+  // If using placeholders, skip real preloading
+  const isPlaceholder = VIDEO_CONFIGS[0].src[0] === 'placeholder' || (!VIDEO_CONFIGS[0].src[0] && !VIDEO_CONFIGS[0].src[1]);
+
+  if (isPlaceholder) {
+    // Simulate preload for demo
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      const pct = Math.round((i / total) * 100);
+      fill.style.width = pct + '%';
+      txt.textContent = `${i} / ${total} loaded`;
+      if (i >= total) {
+        clearInterval(interval);
+        setTimeout(() => { showScreen('screen-task'); renderTrial(); }, 400);
+      }
+    }, 300);
+    return;
+  }
+
+  VIDEO_CONFIGS.forEach((cfg, idx) => {
+    const vid = document.createElement('video');
+    vid.muted = true;
+    vid.loop = true;
+    vid.preload = 'auto';
+    vid.playsInline = true;
+
+    cfg.src.forEach(url => {
+      if (!url) return;
+      const source = document.createElement('source');
+      source.src = url;
+      source.type = url.endsWith('.webm') ? 'video/webm' : 'video/mp4';
+      vid.appendChild(source);
+    });
+
+    vid.addEventListener('canplaythrough', () => {
+      loaded++;
+      const pct = Math.round((loaded / total) * 100);
+      fill.style.width = pct + '%';
+      txt.textContent = `${loaded} / ${total} loaded`;
+      preloadedVideos[cfg.id] = vid;
+      if (loaded >= total) {
+        setTimeout(() => { showScreen('screen-task'); renderTrial(); }, 400);
+      }
+    }, { once: true });
+
+    // Fallback: if video errors, still count it
+    vid.addEventListener('error', () => {
+      loaded++;
+      if (loaded >= total) {
+        setTimeout(() => { showScreen('screen-task'); renderTrial(); }, 400);
+      }
+    }, { once: true });
+
+    vid.load();
+  });
+}
+
+// ============================================================
+// TASK
+// ============================================================
+function renderTrial() {
+  const t = state.currentTrial;
+  const total = state.trialOrder.length;
+  const cfg = VIDEO_CONFIGS[state.trialOrder[t]];
+
+  document.getElementById('video-counter').textContent = `Video ${t + 1} of ${total}`;
+  document.getElementById('task-progress').style.width = ((t / total) * 100) + '%';
+
+  // Reset slider
+  const slider = document.getElementById('rating-slider');
+  slider.value = 50;
+  updateSliderDisplay(50);
+
+  // Build video element
+  const wrapper = document.getElementById('video-wrapper');
+  wrapper.innerHTML = '';
+
+  if (cfg.src[0] === 'placeholder' || (!cfg.src[0] && !cfg.src[1])) {
+    wrapper.innerHTML = `
+      <div class="video-placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        <span>Video placeholder — ${cfg.id}</span>
+        <span style="font-size:11px;opacity:0.6;">Replace src in VIDEO_CONFIGS with your actual file URLs</span>
+      </div>`;
+  } else {
+    const vid = preloadedVideos[cfg.id] || document.createElement('video');
+    vid.muted = true;
+    vid.loop = true;
+    vid.playsInline = true;
+    vid.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+    wrapper.appendChild(vid);
+    vid.play().catch(() => {});
+  }
+
+  state.trialStart = Date.now();
+}
+
+function updateSliderDisplay(val) {
+  document.getElementById('slider-val').textContent = val;
+  const slider = document.getElementById('rating-slider');
+  const pct = val / 100;
+  // Full gradient track: blue → violet → red, with unplayed portion dimmed
+  const filled = `linear-gradient(to right,
+    #7eb8e0 0%,
+    #a08fd4 30%,
+    #c97aaa 55%,
+    #e07070 100%
+  )`;
+  slider.style.background = `linear-gradient(to right,
+    #7eb8e0 0%,
+    #a08fd4 30%,
+    #c97aaa 55%,
+    #e07070 ${pct*100}%,
+    #2e2e38 ${pct*100}%
+  )`;
+}
+
+function unlockSlider() {} // touch unlock already handled by gate
+
+function confirmRating() {
+  const t = state.currentTrial;
+  const cfg = VIDEO_CONFIGS[state.trialOrder[t]];
+  const rating = parseInt(document.getElementById('rating-slider').value);
+  const rt = Date.now() - state.trialStart;
+
+  state.ratings.push({
+    trial: t + 1,
+    video_id: cfg.id,
+    rating_0_100: rating,
+    response_time_ms: rt,
+  });
+
+  // Stop any playing video
+  const vid = document.querySelector('#video-wrapper video');
+  if (vid) vid.pause();
+
+  state.currentTrial++;
+
+  if (state.currentTrial >= state.trialOrder.length) {
+    finishTask();
+  } else {
+    document.getElementById('screen-task').classList.remove('active');
+    // brief fade reset
+    setTimeout(() => {
+      document.getElementById('screen-task').classList.add('active');
+      renderTrial();
+    }, 50);
+  }
+}
+
+// ============================================================
+// FINISH
+// ============================================================
+function finishTask() {
+  const output = {
+    subject_id: state.subjectId,
+    session_timestamp: new Date().toISOString(),
+    demographics: {
+      age: state.age,
+      gender: state.gender,
+      dance_experience: state.dance,
+      years_of_practice: state.years,
+    },
+    trial_order: state.trialOrder.map(i => VIDEO_CONFIGS[i].id),
+    ratings: state.ratings,
+  };
+
+  // Send to Google Sheets
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwvd903e3Q4Vd5IubvY61tyOUNRSSjm6m-SzyMuJ4d_G8jFRxSmZLOiksTz6imTgH77FA/exec'; 
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(output)
+    }).catch(err => console.warn('Data send failed:', err));
+
+  showScreen('screen-thanks');
+}
+
+// Init slider display
+updateSliderDisplay(50);
+</script>
+</body>
+</html>
